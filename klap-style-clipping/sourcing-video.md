@@ -137,6 +137,23 @@ docker compose exec clipper curl -s http://pot-provider:4416/ping
 
 The token server is a long-running daemon. Started with `&` from a short-lived shell it dies with that shell, and the next download fails with a connection-refused that looks like a yt-dlp bug. Run it under systemd, Docker, `tmux`, or your process manager, and health-check `/ping` before each batch.
 
+## Disk space — the failure that masquerades as everything else
+
+```
+OSError: [Errno 28] No space left on device
+```
+
+Clipping is disk-hungry and the numbers surprise people. A single 2-hour 1080p source is 1–2 GB before you cut anything. Then every stage re-encodes: `cut.mp4` → `framed.mp4` → final burn-in, so each clip is written three times. Ten clips from one source can burn 5–10 GB of working files, and batches accumulate because the outputs are kept.
+
+Budget **~10 GB free per source video**, and clean up between runs:
+
+- Delete source downloads once clips are rendered — they're the biggest single item and easy to re-fetch.
+- Delete intermediates (`cut.mp4`, `framed.mp4`) after burn-in; only the final clip matters.
+- Sweep old batches. A tool that keeps every previous job's clips fills a disk quietly over weeks.
+- Check the temp directory too — ffmpeg and yt-dlp write there, and it may be on a different, smaller volume than your output folder.
+
+A full disk does not fail cleanly. Downloads truncate, ffmpeg writes corrupt output, and yt-dlp cannot write its player cache — which can surface as extraction failures that look like bot detection or missing formats. **If you see ENOSPC anywhere in the log, fix disk space first and re-test before debugging anything else.** Chasing a token error on a full disk wastes hours.
+
 ## Skipping the download entirely
 
 Cleanest path when it's your own content: use the original file. Export from your recorder (Riverside, Zoom, OBS, StreamYard) and feed the pipeline directly — no bot detection, no tokens, and better source quality than a re-encoded YouTube stream.
