@@ -19,7 +19,13 @@ ERROR: [youtube] <ID>: Requested format is not available. Use --list-formats for
 
 **Cause:** the request lacked a valid **GVS PO token** (proof-of-origin), or yt-dlp couldn't solve YouTube's JavaScript challenge. YouTube withholds stream URLs from clients it can't verify.
 
-**Fix, in order:**
+**Fastest path — run the bundled script** on the machine that actually executes yt-dlp. It installs, builds, patches, starts the daemon, and verifies end to end, printing a clear pass/fail per step:
+
+```bash
+bash setup-ytdlp-potoken.sh [VIDEO_ID]
+```
+
+If you'd rather do it by hand, or the script fails at a step you want to understand:
 
 1. **Update yt-dlp.** YouTube changes this often; a build a few weeks old is already stale.
    ```bash
@@ -98,6 +104,34 @@ NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.crt node build/main.js
 ```
 
 Never disable TLS verification to get around this.
+
+## If your clipper runs in Docker
+
+This is the most common reason the fix "doesn't work" after being installed correctly. A container has its own loopback: installing the token server on the host leaves `127.0.0.1:4416` unreachable from inside the container, and yt-dlp falls back to a tokenless request — producing the exact same "only images" error as before, which makes it look like the fix failed.
+
+Either run the setup script *inside* the container, or put the server on the same Docker network and point the plugin at it by service name:
+
+```yaml
+services:
+  pot-provider:
+    image: brainicism/bgutil-ytdlp-pot-provider
+    ports: ["4416:4416"]
+  clipper:
+    # your service
+    depends_on: [pot-provider]
+```
+
+Then pass the base URL to yt-dlp so it stops looking at localhost:
+
+```bash
+yt-dlp --extractor-args "youtubepot-bgutilhttp:base_url=http://pot-provider:4416" ...
+```
+
+Verify from inside the container, not the host — that is the only test that means anything:
+
+```bash
+docker compose exec clipper curl -s http://pot-provider:4416/ping
+```
 
 ## Keeping the server alive
 
