@@ -1,6 +1,6 @@
 # Houston Job Search — Ariel Ferrer
 
-Generated 2026-08-04 · 24 screened roles (20 core + 4 backups) · Houston / Galveston Bay metro
+Generated 2026-08-04 · 32 screened roles across 4 tiers · Houston / Galveston Bay metro
 
 ---
 
@@ -81,6 +81,39 @@ Rows 6 and 7 are two levels above your current title — low odds, but the appli
 
 Row 17 is a GM-level reach, but it is in **Pasadena** — the same submarket as your Amazon site — and pays $159.6k–170.6k. Worth the twenty minutes. Row 20 is e-commerce fulfillment, the closest business model to Amazon on this list.
 
+### Associate tier (8 roles) — the fastest path back to a blue badge
+
+**Read this before you apply to any of these.**
+
+Amazon's hourly warehouse and fulfillment associate jobs are **not posted on Indeed at all.** They live exclusively at **hiring.amazon.com**. An Indeed search for "Amazon warehouse associate" in Houston returns literally nothing, which is why you may have felt like they were not out there. They are — just on a different site.
+
+→ **https://hiring.amazon.com/search/warehouse-jobs#/** — filter to League City, Pasadena, La Marque. This is row 25 and it is the single highest-leverage link in this whole file.
+
+**Why the associate route is strategically smart, not a step backward.** Look at the Area Manager II basic qualification again:
+
+> Bachelor's degree or equivalent, **or 2+ years of Amazon (blue badge/FTE) experience**
+
+You have both — but your blue badge lapsed in January 2026, seven months ago. Amazon fills Area Manager roles heavily from internal candidates, and an internal applicant with a current badge is in a different queue than an external one. Taking an associate role restores the badge and puts you on the inside of the AM pipeline rather than competing against the whole Houston market for row 1.
+
+**The honest tradeoff:** these pay $18–25/hr, below the $28/hr floor on your Indeed profile. That is a real pay cut, and it is your call whether the re-entry is worth it. My read is that it is worth it *if* you treat it as a 6–12 month bridge and keep applying to Area Manager roles as an internal candidate the whole time. It is not worth it as a destination.
+
+| # | Role | Company | Location | Pay | Resume |
+|---|---|---|---|---|---|
+| 25 | [**All Amazon hourly roles**](https://hiring.amazon.com/search/warehouse-jobs#/) | Amazon | Houston metro | ~$18–23/hr | D |
+| 26 | [Delivery Station CS Associate, DSL](https://to.indeed.com/aad2ymh8726y) | Amazon | La Marque | $18–25/hr | D |
+| 27 | [Project Assistant, Warehouse Ops](https://to.indeed.com/aac6j8t92khs) | Shenzhen YH Global | Houston | $25–32/hr | D |
+| 28 | [**Warehouse Lead**](https://to.indeed.com/aa87q7q4pwwn) | Liebherr Group | Houston | $39k–53.8k | D/B |
+| 29 | [Inventory Specialist](https://to.indeed.com/aajn2d4z9m2b) | ROSEN Group | Houston | $35.7k–56.2k | D |
+| 30 | [Quality Inspector](https://to.indeed.com/aakn7xftsh9q) | SNVA Ventures | **Pasadena** | $25–30/hr | D |
+| 31 | [Receiver/Stocker – Day, FT](https://to.indeed.com/aar7p88d44gh) | Lowe's | Baytown | not listed | D |
+| 32 | [Receiver/Stocker – Flexible, PT](https://to.indeed.com/aa6drd6r2dr9) | Lowe's | **Webster** | $31.2k–43.8k | D |
+
+Three worth calling out:
+
+- **Row 28 (Liebherr Warehouse Lead)** is the best of this tier. It is a *Lead* role — half a step down, not a full one — so it keeps leadership scope on your resume and the gap never reads as a demotion. At $39k–53.8k it also beats the Amazon associate roles on pay.
+- **Row 26 (Amazon Delivery Station CS Associate)** lists as a preferred qualification *"experience understanding performance metrics and developing them to measure progress against key performance indicators."* That is a word-for-word description of your Process Assistant job. Say that in the application. La Marque is ~15 minutes from League City.
+- **Row 32 (Lowe's, Webster)** is the closest listing to your house on this entire list — about 10 minutes. Part-time, but a workable bridge while the Area Manager applications process.
+
 ### Backups — security and IT track (4 roles)
 
 | # | Role | Company | Location | Pay | Resume |
@@ -106,6 +139,9 @@ Three versions in [`resumes/`](resumes/), each keyword-matched to real job descr
 
 - **[Track C — Security / Technical](resumes/track-C-security-technical.md)** → rows 4, 8, 11, 21–24
   **Leads with Houston Police Department rather than Amazon.** For security and SOC roles the public-safety experience is the headline qualification and should not be buried under a warehouse job.
+
+- **[Track D — Associate](resumes/track-D-associate.md)** → rows 25–32
+  **Built to defuse overqualification.** For associate roles you are not competing on credentials — you have more than the job asks. You are competing against the hiring manager's suspicion that you will quit in three months. This version reframes Process Assistant as hands-on floor work (which is true — PAs work the floor), drops the "seeking to return as an Area Manager" line that is correct everywhere else and disqualifying here, and adds an explicit shift-availability block.
 
 ---
 
