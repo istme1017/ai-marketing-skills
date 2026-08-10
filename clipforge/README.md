@@ -86,9 +86,20 @@ Two ways to do better, both supported:
 - **Let a model pick.** Run `--dry-run`, have Claude read the transcript and choose, then feed those back with `--moments moments.json`. The program handles the mechanical work and defers the judgment.
 - **Learn the weights.** [`clip-brain.md`](../klap-style-clipping/clip-brain.md) describes building a corpus of clips that actually won and deriving the scoring from evidence instead of my guesses.
 
+## Tests
+
+```bash
+python clipforge/tests/test_clipforge.py     # standalone
+pytest clipforge/tests/                       # or under pytest
+```
+
+19 tests covering caption grouping and timing, the width constraint, and
+selection scoring — the parts that fail quietly rather than loudly.
+
 ## Verified behaviour
 
-Rendered end to end on a real 91s source: 1080×1920 @ 30fps output, Montserrat ExtraBold ALL-CAPS captions, green `#22C55E` active word with a 112% pop, audio at −14 LUFS.
+Rendered end to end on a real 91s local source, and from a URL (596s
+download → transcribe → select → render): 1080×1920 @ 30fps output, Montserrat ExtraBold ALL-CAPS captions, green `#22C55E` active word with a 112% pop, audio at −14 LUFS.
 
 **Caption width is enforced against measurement, not assumption.** ASS `MarginL`/`MarginR` are ignored whenever an event uses `\pos()` — which every event here does — so margins alone constrain nothing. Measured on burned-in frames, a three-word group rendered **913px** wide and ran under the like/comment/share rail. Grouping now splits on measured width, and single words too long to split are shrunk with `\fs`. Re-measured across 80 sampled frames including the pop animation: widest line **748px at x 163–911**, inside the 150–930 safe box.
 

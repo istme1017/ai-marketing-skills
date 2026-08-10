@@ -91,9 +91,10 @@ if ($IncludeOldClips) {
 }
 
 # yt-dlp cache — always regenerable.
-$ytCache = Join-Path $env:LOCALAPPDATA 'yt-dlp'
+# LOCALAPPDATA is unset outside Windows, and Join-Path throws on a null Path.
+$ytCache = if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'yt-dlp' } else { $null }
 $cacheBytes = 0
-if (Test-Path $ytCache) {
+if ($ytCache -and (Test-Path $ytCache)) {
     $cacheBytes = (Get-ChildItem $ytCache -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
 }
 
@@ -133,7 +134,7 @@ foreach ($c in $candidates) {
         $freed += $sz
     } catch { $errors++; Write-Host ("  skip (in use): {0}" -f $c.File.Name) -ForegroundColor DarkGray }
 }
-if (Test-Path $ytCache) {
+if ($ytCache -and (Test-Path $ytCache)) {
     try { Remove-Item -LiteralPath $ytCache -Recurse -Force -ErrorAction Stop; $freed += $cacheBytes } catch { $errors++ }
 }
 foreach ($t in $tempFiles) {
