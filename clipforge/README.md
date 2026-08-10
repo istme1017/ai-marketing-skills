@@ -34,10 +34,15 @@ python -m clipforge input.mp4 -n 6 --dry-run
 ## Install
 
 ```bash
-pip install faster-whisper yt-dlp pillow
-# optional, enables face-centered cropping instead of center crop:
-pip install opencv-python
+pip install faster-whisper yt-dlp pillow numpy
+# optional, enables face detection for framing:
+pip install "opencv-python<5"
 ```
+
+**Pin OpenCV below 5.** OpenCV 5 removed `cv2.CascadeClassifier`, which is what
+face detection uses, so on 5.x the face pass silently never runs and framing
+falls back to the motion heuristic. Nothing crashes — detection degrades on any
+failure by design — but you lose the better signal.
 
 `ffmpeg` and `ffprobe` must be on PATH. Install the **Montserrat ExtraBold** font or captions fall back to another face and stop matching the spec — the program warns when it can't find it.
 
@@ -58,7 +63,9 @@ inst.save("MontserratExtraBold-static.ttf")
 2. **Transcribe** — faster-whisper, word-level timestamps, cached per source so reruns are cheap.
 3. **Select** — scores every sentence-aligned window 0–100 and keeps the best non-overlapping set.
 4. **Cut** — re-encoded, never stream-copied; a keyframe-snapped cut eats the first word of the hook.
-5. **Reframe** — 9:16 crop around the detected face, scaled to 1080×1920.
+5. **Reframe** — 9:16 crop centred on the subject, scaled to 1080×1920. Tries face
+   detection, then a motion heuristic (per-column temporal variance), then a plain
+   centre crop. `clips.json` records which was used per clip in `framing`.
 6. **Caption** — ASS karaoke: 1–3 ALL-CAPS words, active word green with a scale pop.
 7. **Burn** — captions in, audio normalised to −14 LUFS.
 
@@ -93,13 +100,14 @@ python clipforge/tests/test_clipforge.py     # standalone
 pytest clipforge/tests/                       # or under pytest
 ```
 
-19 tests covering caption grouping and timing, the width constraint, and
-selection scoring — the parts that fail quietly rather than loudly.
+20 tests covering caption grouping and timing, the width constraint, path
+handling, and selection scoring — the parts that fail quietly rather than loudly.
 
 ## Verified behaviour
 
-Rendered end to end on a real 91s local source, and from a URL (596s
-download → transcribe → select → render): 1080×1920 @ 30fps output, Montserrat ExtraBold ALL-CAPS captions, green `#22C55E` active word with a 112% pop, audio at −14 LUFS.
+Rendered end to end on a 91s local source, from a URL (596s download →
+transcribe → select → render), and on a 2.65-hour lecture (5 clips scoring
+68–82, framing split 2 face / 3 motion / 0 centre): 1080×1920 @ 30fps output, Montserrat ExtraBold ALL-CAPS captions, green `#22C55E` active word with a 112% pop, audio at −14 LUFS.
 
 **Caption width is enforced against measurement, not assumption.** ASS `MarginL`/`MarginR` are ignored whenever an event uses `\pos()` — which every event here does — so margins alone constrain nothing. Measured on burned-in frames, a three-word group rendered **913px** wide and ran under the like/comment/share rail. Grouping now splits on measured width, and single words too long to split are shrunk with `\fs`. Re-measured across 80 sampled frames including the pop animation: widest line **748px at x 163–911**, inside the 150–930 safe box.
 
