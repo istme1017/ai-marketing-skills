@@ -79,7 +79,9 @@ ok "Codigo copiado"
 
 step "6. Dependencias de Python"
 & $py.Source -m pip install --quiet --upgrade pip 2>&1 | Out-Null
-$pkgs = @("faster-whisper", "yt-dlp", "pillow", "fonttools", "opencv-python")
+# opencv-python must stay below 5: OpenCV 5 removed CascadeClassifier,
+# which is what the face-centred crop uses.
+$pkgs = @("faster-whisper", "yt-dlp", "pillow", "fonttools", "numpy", "opencv-python<5")
 foreach ($p in $pkgs) {
     & $py.Source -m pip install --quiet --upgrade $p 2>&1 | Out-Null
     if ($LASTEXITCODE -eq 0) { ok $p } else { bad "$p fallo"; $failed = 1 }

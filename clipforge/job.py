@@ -148,7 +148,9 @@ def run_job(source: str, opts: JobOptions, on: Progress | None = None) -> JobRes
         final = os.path.join(opts.out_dir, f"{tag}.mp4")
 
         render.cut(video, m.start, m.end, raw_cut)
-        focus = render.face_center_x(raw_cut)
+        # Detect per clip, not per source: sampling across a multi-hour video
+        # averages over scene changes and yields a meaningless global answer.
+        focus, how = render.subject_center_x(raw_cut)
         render.reframe(raw_cut, framed, cfg.render, focus_x=focus)
 
         if opts.burn_captions:
@@ -165,7 +167,7 @@ def run_job(source: str, opts: JobOptions, on: Progress | None = None) -> JobRes
             render.cleanup(raw_cut, framed)
 
         results.append({**m.to_dict(), "file": os.path.basename(final),
-                        "face_detected": focus is not None})
+                        "framing": how})
 
     with open(os.path.join(opts.out_dir, "clips.json"), "w") as fh:
         json.dump(results, fh, indent=1)

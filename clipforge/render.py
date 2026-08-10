@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import shutil
 import subprocess
 from typing import Any
@@ -35,36 +36,130 @@ def probe(path: str) -> dict[str, Any]:
 
 
 def face_center_x(video: str, samples: int = 12) -> int | None:
-    """Median horizontal face position, or None if OpenCV is unavailable."""
+    """Median horizontal face position, or None if it cannot be determined.
+
+    Never raises. Face detection is an enhancement over a centre crop, so any
+    failure here must degrade to centre-crop rather than kill the render.
+    That matters concretely: OpenCV 5 removed `cv2.CascadeClassifier`, and an
+    earlier version of this function caught only ImportError, so installing
+    a current `opencv-python` turned a missing nicety into a crashed job.
+    """
+    cap = None
     try:
         import cv2
+
+        # Haar cascades live in cv2 through 4.x; OpenCV 5 dropped them in
+        # favour of FaceDetectorYN, which needs a downloaded ONNX model.
+        if not hasattr(cv2, "CascadeClassifier"):
+            return None
+
+        cap = cv2.VideoCapture(video)
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if total <= 0:
+            return None
+
+        cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        if cascade.empty():
+            return None
+
+        xs: list[float] = []
+        step = max(1, total // samples)
+        for i in range(0, total, step):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+            ok, frame = cap.read()
+            if not ok:
+                continue
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            for (x, _y, w, _h) in cascade.detectMultiScale(gray, 1.2, 5):
+                xs.append(x + w / 2)
+
+        if not xs:
+            return None
+        xs.sort()
+        return int(xs[len(xs) // 2])
+    except Exception:                    # noqa: BLE001 - see docstring
+        return None
+    finally:
+        if cap is not None:
+            try:
+                cap.release()
+            except Exception:            # noqa: BLE001
+                pass
+
+
+def motion_center_x(video: str, samples: int = 24) -> int | None:
+    """Horizontal centre of the most *moving* part of the frame, or None.
+
+    Fallback for when face detection finds nothing — low resolution, a speaker
+    in profile, or someone small in a wide shot. A centre crop is a bad guess
+    there: on a lecture recording where the subject stands off to one side it
+    cuts them out of frame entirely.
+
+    Talking-head footage has a static background and a subject who moves, so
+    per-column variance across time tracks the subject well. Needs only ffmpeg
+    and numpy, so it works wherever the pipeline already runs.
+    """
+    try:
+        import numpy as np
+        from PIL import Image
     except ImportError:
         return None
 
-    cap = cv2.VideoCapture(video)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    if total <= 0:
-        cap.release()
-        return None
+    tmp = None
+    try:
+        info = probe(video)
+        duration, width = info["duration"], info["width"]
+        if duration <= 0:
+            return None
 
-    cascade = cv2.CascadeClassifier(
-        cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-    xs: list[float] = []
-    step = max(1, total // samples)
-    for i in range(0, total, step):
-        cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-        ok, frame = cap.read()
-        if not ok:
-            continue
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        for (x, _y, w, _h) in cascade.detectMultiScale(gray, 1.2, 5):
-            xs.append(x + w / 2)
-    cap.release()
+        tmp = tempfile.mkdtemp(prefix="cf-motion-")
+        # Sample evenly across the whole video, downscaled — we only need the
+        # coarse horizontal energy profile, not detail.
+        fps = max(samples / duration, 0.01)
+        run(["ffmpeg", "-y", "-v", "error", "-i", video,
+             "-vf", f"fps={fps},scale=160:90,format=gray",
+             "-frames:v", str(samples), os.path.join(tmp, "f%03d.png")])
 
-    if not xs:
+        frames = sorted(f for f in os.listdir(tmp) if f.endswith(".png"))
+        if len(frames) < 3:
+            return None
+
+        stack = np.stack([
+            np.array(Image.open(os.path.join(tmp, f)).convert("L"), dtype=float)
+            for f in frames
+        ])
+        # Variance over time per pixel, collapsed to a per-column profile.
+        col_energy = stack.var(axis=0).mean(axis=0)
+        if col_energy.max() <= 1e-6:
+            return None                       # static shot: nothing to track
+
+        # Weighted centroid of the columns carrying real movement. The
+        # threshold ignores compression noise spread across the frame.
+        thresh = col_energy.max() * 0.35
+        strong = col_energy >= thresh
+        if not strong.any():
+            return None
+        idx = np.arange(col_energy.size)
+        centroid = float((idx[strong] * col_energy[strong]).sum()
+                         / col_energy[strong].sum())
+        return int(centroid / col_energy.size * width)
+    except Exception:                          # noqa: BLE001
         return None
-    xs.sort()
-    return int(xs[len(xs) // 2])
+    finally:
+        if tmp:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+def subject_center_x(video: str) -> tuple[int | None, str]:
+    """Best available horizontal focus point, and how it was found."""
+    x = face_center_x(video)
+    if x is not None:
+        return x, "face"
+    x = motion_center_x(video)
+    if x is not None:
+        return x, "motion"
+    return None, "center"
 
 
 def cut(src: str, start: float, end: float, dst: str) -> str:
