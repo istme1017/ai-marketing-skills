@@ -11,11 +11,15 @@ from typing import Any
 from .config import RenderConfig
 
 
-def run(cmd: list[str]) -> None:
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+def run_in(cmd: list[str], cwd: str | None = None) -> None:
+    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     if proc.returncode != 0:
         tail = "\n".join(proc.stderr.strip().splitlines()[-6:])
         raise RuntimeError(f"ffmpeg failed ({proc.returncode}):\n{tail}")
+
+
+def run(cmd: list[str]) -> None:
+    run_in(cmd)
 
 
 def probe(path: str) -> dict[str, Any]:
@@ -95,13 +99,26 @@ def reframe(src: str, dst: str, cfg: RenderConfig, focus_x: int | None = None) -
 
 
 def burn(src: str, ass_path: str, dst: str, cfg: RenderConfig) -> str:
-    """Burn captions and normalise loudness — the final render."""
-    escaped = ass_path.replace("\\", "/").replace(":", r"\:").replace("'", r"\'")
-    run(["ffmpeg", "-y", "-v", "error", "-i", src,
-         "-vf", f"ass='{escaped}'",
-         "-af", f"loudnorm={cfg.loudness_target}",
-         "-c:v", "libx264", "-preset", cfg.preset, "-crf", str(cfg.crf),
-         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", cfg.audio_bitrate, dst])
+    """Burn captions and normalise loudness — the final render.
+
+    The subtitle path is passed as a bare filename with ffmpeg run from its
+    directory. Escaping a full path inside a filtergraph is a trap: the value
+    goes through two parsers, so a Windows drive colon needs `\\:`, and an
+    apostrophe cannot be escaped with `\\'` at all — it silently truncates and
+    libass then fails on a filename that does not exist. Directory paths like
+    `C:\\Users\\O'Brien\\clips` are ordinary, so sidestep the whole problem:
+    src and dst stay absolute (plain arguments need no escaping), and only the
+    slugified basename reaches the filter.
+    """
+    work_dir = os.path.dirname(os.path.abspath(ass_path)) or "."
+    name = os.path.basename(ass_path)
+
+    run_in(["ffmpeg", "-y", "-v", "error", "-i", os.path.abspath(src),
+            "-vf", f"ass={name}",
+            "-af", f"loudnorm={cfg.loudness_target}",
+            "-c:v", "libx264", "-preset", cfg.preset, "-crf", str(cfg.crf),
+            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", cfg.audio_bitrate,
+            os.path.abspath(dst)], cwd=work_dir)
     return dst
 
 

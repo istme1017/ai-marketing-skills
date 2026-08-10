@@ -197,6 +197,25 @@ def test_max_internal_gap_detects_dead_air():
     assert select.max_internal_gap(w, 0, 1) == 3.5
 
 
+# ---------------------------------------------------------------- paths
+
+def test_burn_uses_bare_filename_not_escaped_path():
+    """Regression: an apostrophe in a directory name broke caption burn-in.
+
+    ffmpeg filtergraph values pass through two parsers; `\'` does not escape
+    an apostrophe, it truncates the path, and libass then fails on a file that
+    does not exist. burn() must therefore pass only the basename and run from
+    the file's directory.
+    """
+    import inspect
+
+    from clipforge import render
+    src = inspect.getsource(render.burn)
+    assert "os.path.basename(ass_path)" in src
+    assert "cwd=work_dir" in src
+    assert r"replace(\"'\"" not in src, "must not attempt to escape apostrophes"
+
+
 if __name__ == "__main__":
     fns = [(n, f) for n, f in sorted(globals().items())
            if n.startswith("test_") and callable(f)]
