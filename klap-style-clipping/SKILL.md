@@ -16,7 +16,8 @@ Read the files in this order, then run the pipeline. Do not skip the spec: the e
 1. [clip-selection.md](clip-selection.md) — how Klap picks moments: what counts as a clippable moment, the virality score (0–100 per clip), hook rules, and clip length targets. Read this before touching the video.
 2. [edit-spec.md](edit-spec.md) — the exact visual spec of the Klap edit: canvas, framing, caption typography, colors, highlight behavior, word-pop animation, emoji rules, and the ASS subtitle values that reproduce it pixel-for-pixel.
 3. [clip-brain.md](clip-brain.md) — the content-intelligence layer. Cutting is the easy half; knowing *which* moment deserves to be a clip is the hard one. This replaces hand-written heuristics with evidence: harvest clips that already won, trace each back to its exact moment in the source video, and learn what those moments shared. Read it when building the selection system rather than running a single job.
-4. [pipeline.md](pipeline.md) — the executable pipeline: Whisper word-level transcription → clip cutting → 9:16 reframe → ASS caption generation → ffmpeg burn-in. Run these steps with Bash.
+4. [distribution.md](distribution.md) — publishing one master clip across YouTube Shorts, TikTok, Reels, X and Twitch: per-platform safe zones (what the app UI covers), duration limits, watermark rules, and per-platform post text. Read it before choosing caption placement or clip length.
+5. [pipeline.md](pipeline.md) — the executable pipeline: Whisper word-level transcription → clip cutting → 9:16 reframe → ASS caption generation → ffmpeg burn-in. Run these steps with Bash.
 
 ## The workflow, condensed
 

@@ -47,7 +47,7 @@ The pipeline burns captions from an `.ass` file. These are the canonical values 
 
 ```
 PlayResX: 1080, PlayResY: 1920
-Style: Klap,Montserrat ExtraBold,105,&H00FFFFFF,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,8,2,5,60,60,580,1
+Style: Klap,Montserrat ExtraBold,105,&H00FFFFFF,&H00FFFFFF,&H00000000,&H96000000,-1,0,0,0,100,100,0,0,1,8,2,5,150,150,580,1
 Highlight fill override: \c&H5EC522&   (ASS is BGR: #22C55E → &H5EC522&)
 Position override per event: \pos(540,1340)
 Active-word pop: \t(0,80,\fscx112\fscy112)\t(80,160,\fscx100\fscy100)
@@ -56,6 +56,10 @@ with only the active word carrying the highlight + pop overrides.
 ```
 
 Alignment 5 (middle-center) + `\pos(540,1340)` keeps the block fixed so words don't jitter as the highlight moves.
+
+**Margins are 150, not 60, and that is deliberate.** Every platform stacks its like/comment/share icons in a right rail from about x = 930 to the edge, and that rail runs straight through the caption's vertical band. At 60px margins a wide three-word group can span to x ≈ 1020 and slide under the icons. Margins of 150 cap the text box at 780px wide (x 150–930), which clears the rail on TikTok, Shorts, and Reels.
+
+780px fits roughly 12 ExtraBold characters at 105px. When a three-word group is wider than that, drop it to two words rather than letting it wrap or overflow — `WrapStyle: 2` does not wrap, so an over-wide line runs off the safe area silently. Vertically the block spans y 1280–1400, which clears the tightest bottom overlay (Reels, from y ≈ 1500) by 100px. See [distribution.md](distribution.md) for the full safe-zone table.
 
 ## Definition of done (check every clip)
 
