@@ -2,6 +2,30 @@
 
 Long-form video in, captioned vertical clips out. The executable implementation of [`../klap-style-clipping/`](../klap-style-clipping/).
 
+## Windows: instalación en un paso
+
+```powershell
+.\install-windows.ps1
+```
+
+Instala Python, ffmpeg, las dependencias y la fuente, deja todo en `D:\ClipForge`
+(para no llenar C:) y crea un acceso directo en el escritorio. Al abrirlo se
+levanta la interfaz web en `http://localhost:8899`: pegas un link, eliges cuántos
+clips, y descargas.
+
+## Web UI
+
+```bash
+python -m clipforge.web            # http://localhost:8899
+python -m clipforge.web --port 9000 --out D:/clips
+```
+
+Sin dependencias extra — sólo la librería estándar. Los trabajos corren en
+segundo plano y el progreso se ve en vivo. `--host 127.0.0.1` lo deja sólo local;
+por defecto `0.0.0.0` lo expone a tu red/tailnet.
+
+## CLI
+
 ```bash
 python -m clipforge "https://youtube.com/watch?v=..." -o clips/
 python -m clipforge input.mp4 -n 6 --dry-run
